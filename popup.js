@@ -52,29 +52,42 @@ document.addEventListener("DOMContentLoaded", function() {
         return schedule;
       }
       
-      function createICalFile(schedule) {
-        let iCalContent = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//My calendar//EN\r\n';
-        
+      function generateICal(schedule) {
+        let icalString = "BEGIN:VCALENDAR\\r\\nVERSION:2.0\\r\\n";
         for (let date in schedule) {
-          let start = schedule[date][0];
-          let end = schedule[date][1];
-          
-          let formattedDate = date.replace(/(\d{2})\/(\d{2})/, "20$2$1T");
-          
-          iCalContent += 'BEGIN:VEVENT\r\n';
-          iCalContent += "DTSTART:" + formattedDate + start + '00\r\n';
-          iCalContent += "DTEND:" + formattedDate + end + '00\r\n';
-          iCalContent += 'END:VEVENT\r\n';
+          if (schedule.hasOwnProperty(date)) {
+            let times = schedule[date];
+            for (let i = 0; i < times.length; i++) {
+              if (times[i] !== "&nbsp") {
+                let startTime = times[i].split("-")[0];
+                let endTime = times[i].split("-")[1];
+                icalString += "BEGIN:VEVENT\\r\\n";
+                icalString += "DTSTART:" + date + "T" + startTime + "\\r\\n";
+                icalString += "DTEND:" + date + "T" + endTime + "\\r\\n";
+                icalString += "END:VEVENT\\r\\n";
+              }
+            }
+          }
         }
-        
-        iCalContent += "END:VCALENDAR";
-        
-        return iCalContent;
+        icalString += "END:VCALENDAR\\r\\n";
+        return icalString;
       }      
 
       var table = document.getElementsByTagName("table")[4];
       console.log(table);
       console.log(parseTableToSchedule(table));
+      console.log(generateICal(parseTableToSchedule(table)));
+      
+      const icalData = generateICal(parseTableToSchedule(table));
+      const icalBlob = new Blob([icalData], {type: 'text/calendar;charset=utf-8'});
+      const icalUrl = URL.createObjectURL(icalBlob);
+      
+      const downloadLink = document.createElement("a");
+      downloadLink.href = icalUrl;
+      downloadLink.download = "emploi-du-temps.ics";
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
 
       `
     });
