@@ -59,11 +59,15 @@ document.addEventListener("DOMContentLoaded", function() {
             let times = schedule[date];
             for (let i = 0; i < times.length; i++) {
               if (times[i] !== "&nbsp") {
-                let startTime = times[i].split("-")[0];
-                let endTime = times[i].split("-")[1];
+                let newDate = date.split("/");
+                let startTime = times[i].split("-")[0].split(":");
+                if((parseInt(startTime[0])-2) < 10){startTime[0] = "0" + (parseInt(startTime[0])-2).toString();}else{startTime[0] = (parseInt(startTime[0])-2).toString();};
+                let endTime = times[i].split("-")[1].split(":");
+                if((parseInt(endTime[0])-2) < 10){endTime[0] = "0" + (parseInt(endTime[0])-2).toString();}else{endTime[0] = (parseInt(endTime[0])-2).toString();};
                 icalString += "BEGIN:VEVENT\\r\\n";
-                icalString += "DTSTART:" + date + "T" + startTime + "\\r\\n";
-                icalString += "DTEND:" + date + "T" + endTime + "\\r\\n";
+                icalString += "DTSTART:" + newDate[2] + newDate[1] + newDate[0] + "T" + startTime[0] + startTime[1] + "00" + "Z" + "\\r\\n";
+                icalString += "DTEND:" + newDate[2] + newDate[1] + newDate[0] + "T" + endTime[0] + endTime[1] + "00" + "Z" + "\\r\\n";
+                icalString += "SUMMARY:MCDO\\r\\n";
                 icalString += "END:VEVENT\\r\\n";
               }
             }
@@ -71,18 +75,31 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         icalString += "END:VCALENDAR\\r\\n";
         return icalString;
-      }      
+      }
+      
+      function getTableFromHTML(){
+        var gsDiv = document.querySelector('.gs');
+        var tables = gsDiv.getElementsByTagName('table');
+        for (var i = 0; i < tables.length; i++) {
+          if (tables[i].offsetWidth === 525) {
+            // table with width of 525 found
+            var tableWithWidth525 = tables[i];
+            break;
+          }
+        }
+        return tableWithWidth525;
+      }
 
-      var table = document.getElementsByTagName("table")[4];
+      var table = getTableFromHTML();
       console.log(table);
       console.log(parseTableToSchedule(table));
       console.log(generateICal(parseTableToSchedule(table)));
       
-      const icalData = generateICal(parseTableToSchedule(table));
-      const icalBlob = new Blob([icalData], {type: 'text/calendar;charset=utf-8'});
-      const icalUrl = URL.createObjectURL(icalBlob);
+      var icalData = generateICal(parseTableToSchedule(table));
+      var icalBlob = new Blob([icalData], {type: 'text/calendar;charset=utf-8'});
+      var icalUrl = URL.createObjectURL(icalBlob);
       
-      const downloadLink = document.createElement("a");
+      var downloadLink = document.createElement("a");
       downloadLink.href = icalUrl;
       downloadLink.download = "emploi-du-temps.ics";
       document.body.appendChild(downloadLink);
